@@ -63,7 +63,7 @@ Jika keduanya menampilkan versi, instalasi berhasil.
 Clone repository:
 git clone https://github.com/hanzz1213/Simple-Whatsapp-Bot.git fwhzz-bot
 Masuk ke folder:
-cd fwhzz-bot
+cd Simple-Whatsapp-Bot
 📦 Install Dependency
 Jalankan:
 npm install

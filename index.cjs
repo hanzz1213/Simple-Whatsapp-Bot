@@ -545,12 +545,6 @@ function parseCommand(text) {
     if (!text.startsWith("!")) {
         return null;
 
-    // FWHZZ OWNER ONLY
-    if (!fwhzzOwnerOnly(msg, text)) {
-        return;
-    }
-
-
     }
 
     const parts =
@@ -720,7 +714,7 @@ async function commandStatus(msg) {
 ┃ 🟢 Status: ONLINE
 ┃ 🔗 WhatsApp: CONNECTED
 ┃ 🔄 Reconnect: 2 detik
-┃ 👑 Owner: ${config.owner || "BELUM DIATUR"}
+┃ 👑 Owner: Terproteksi
 ┃ ⏱️ Uptime: ${formatUptime(process.uptime())}
 ┃ 💾 RAM: ${(memory.rss / 1024 / 1024).toFixed(1)} MB
 ┃
@@ -1866,6 +1860,13 @@ async function handleMessage(msg) {
 
     const text =
         getText(msg);
+    
+    // FWHZZ OWNER ONLY
+    // Command dari non-owner diabaikan tanpa respons.
+    if (text.startsWith("!") && !fwhzzIsOwner(msg)) {
+        return;
+    }
+
 
     if (!text) {
         return;

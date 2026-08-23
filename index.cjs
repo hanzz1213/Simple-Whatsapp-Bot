@@ -63,6 +63,70 @@ function loadConfig() {
 
 const config = loadConfig();
 
+// FWHZZ OWNER ONLY SYSTEM
+// Owner dibaca dari config.json.
+// Nomor owner TIDAK disimpan di source code.
+
+function fwhzzNormalizeNumber(value) {
+    if (!value) return "";
+
+    let number = String(value)
+        .replace(/\D/g, "");
+
+    if (number.startsWith("0")) {
+        number = "62" + number.slice(1);
+    }
+
+    return number;
+}
+
+function fwhzzGetSender(msg) {
+    return (
+        msg?.key?.participant ||
+        msg?.participant ||
+        msg?.key?.remoteJid ||
+        ""
+    );
+}
+
+function fwhzzGetSenderNumber(msg) {
+    const sender = fwhzzGetSender(msg);
+
+    return fwhzzNormalizeNumber(
+        String(sender)
+            .split(":")[0]
+            .split("@")[0]
+    );
+}
+
+function fwhzzIsOwner(msg) {
+    const configuredOwner =
+        fwhzzNormalizeNumber(config?.owner);
+
+    const sender =
+        fwhzzGetSenderNumber(msg);
+
+    if (!configuredOwner) {
+        return false;
+    }
+
+    return sender === configuredOwner;
+}
+
+function fwhzzOwnerOnly(msg, text) {
+
+    // Pesan biasa tetap diproses normal.
+    if (!text || !text.startsWith("!")) {
+        return true;
+    }
+
+    // Command hanya untuk owner.
+    // User lain benar-benar diabaikan.
+    return fwhzzIsOwner(msg);
+}
+
+
+
 // ==================================================
 // NUMBER / JID
 // ==================================================
@@ -192,6 +256,55 @@ function participantMatchesBot(participant) {
 
     return false;
 }
+
+
+// ==================================================
+// OWNER CHECK
+// ==================================================
+
+function isOwner(sender) {
+    if (!sender) {
+        return false;
+    }
+
+    // Cek Owner LID
+    const ownerLid =
+        normalizeJidForCompare(
+            config.ownerLid || ""
+        );
+
+    const senderClean =
+        normalizeJidForCompare(sender);
+
+    if (
+        ownerLid &&
+        senderClean === ownerLid
+    ) {
+        return true;
+    }
+
+    // Cek nomor WhatsApp
+    const ownerNumber =
+        normalizeNumber(
+            config.owner || ""
+        );
+
+    const senderNumber =
+        normalizeNumber(
+            jidNumber(sender)
+        );
+
+    if (
+        ownerNumber &&
+        senderNumber &&
+        ownerNumber === senderNumber
+    ) {
+        return true;
+    }
+
+    return false;
+}
+
 function isAdminParticipant(participant) {
     if (!participant) return false;
 
@@ -431,6 +544,13 @@ function parseCommand(text) {
 
     if (!text.startsWith("!")) {
         return null;
+
+    // FWHZZ OWNER ONLY
+    if (!fwhzzOwnerOnly(msg, text)) {
+        return;
+    }
+
+
     }
 
     const parts =
@@ -1538,6 +1658,202 @@ async function commandScan(msg) {
 }
 
 // ==================================================
+
+
+// ==================================================
+// FWHZZ_AI_PATCH_V2
+// ==================================================
+
+const FWHZZ_AI_MODEL =
+    process.env.FWHZZ_AI_MODEL || "gpt-5.6-luna";
+
+let fwhzzOpenAI = null;
+
+function getFwhzzOpenAI() {
+
+    if (!process.env.OPENAI_API_KEY) {
+        return null;
+    }
+
+    if (!fwhzzOpenAI) {
+        fwhzzOpenAI = new OpenAI({
+            apiKey:
+                process.env.OPENAI_API_KEY
+        });
+    }
+
+    return fwhzzOpenAI;
+}
+
+
+
+
+
+// ==================================================
+// FWHZZ GEMINI AI
+// ==================================================
+
+async function commandAI(msg, prompt) {
+
+    const question =
+        String(prompt || "").trim();
+
+    if (!question) {
+
+        await sock.sendMessage(
+            msg.key.remoteJid,
+            {
+                text:
+                    "🤖 FWHZZ AI\\n\\nGunakan:\\n!ai <pertanyaan>"
+            },
+            {
+                quoted: msg
+            }
+        );
+
+        return;
+    }
+
+    const apiKey =
+        process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+
+        await sock.sendMessage(
+            msg.key.remoteJid,
+            {
+                text:
+                    "❌ GEMINI_API_KEY belum diatur di Termux."
+            },
+            {
+                quoted: msg
+            }
+        );
+
+        return;
+    }
+
+    try {
+
+        await sock.sendMessage(
+            msg.key.remoteJid,
+            {
+                text:
+                    "🤖 FWHZZ AI\\n\\n⏳ Sedang berpikir..."
+            },
+            {
+                quoted: msg
+            }
+        );
+
+        const response =
+            await fetch(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=" +
+                encodeURIComponent(apiKey),
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        systemInstruction: {
+                            parts: [
+                                {
+                                    text:
+                                        "Kamu adalah FWHZZ AI, asisten AI untuk grup WhatsApp. Jawab dalam bahasa yang digunakan pengguna. Berikan jawaban yang jelas, membantu, dan tidak terlalu panjang kecuali diminta."
+                                }
+                            ]
+                        },
+
+                        contents: [
+                            {
+                                role: "user",
+
+                                parts: [
+                                    {
+                                        text:
+                                            question
+                                    }
+                                ]
+                            }
+                        ],
+
+                        generationConfig: {
+                            temperature: 0.7,
+                            maxOutputTokens: 1024
+                        }
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (!response.ok) {
+
+            const detail =
+                data?.error?.message ||
+                "Gemini API error.";
+
+            throw new Error(detail);
+        }
+
+        const answer =
+            data
+                ?.candidates?.[0]
+                ?.content
+                ?.parts
+                ?.map(part => part.text || "")
+                ?.join("")
+                ?.trim();
+
+        if (!answer) {
+            throw new Error(
+                "Gemini tidak mengembalikan jawaban."
+            );
+        }
+
+        await sock.sendMessage(
+            msg.key.remoteJid,
+            {
+                text:
+                    "🤖 FWHZZ AI\\n\\n" +
+                    answer
+            },
+            {
+                quoted: msg
+            }
+        );
+
+    } catch (err) {
+
+        console.error(
+            "GEMINI AI ERROR:",
+            err
+        );
+
+        await sock.sendMessage(
+            msg.key.remoteJid,
+            {
+                text:
+                    "❌ FWHZZ AI gagal.\\n\\n" +
+                    (err.message || "Terjadi kesalahan.")
+            },
+            {
+                quoted: msg
+            }
+        );
+    }
+}
+
+// ==================================================
+// END FWHZZ GEMINI AI
+// ==================================================
+
+
 // COMMAND HANDLER
 // ==================================================
 
@@ -1571,7 +1887,37 @@ async function handleMessage(msg) {
         `[COMMAND] ${command}`,
         args
     );
+const sender =
+    msg.key?.participant ||
+    msg.key?.remoteJid ||
+    "";
 
+
+
+// ==================================================
+// PUBLIC !AI
+// Semua member grup dapat menggunakan command ini.
+// ==================================================
+
+if (command === "!ai") {
+
+    return commandAI(
+        msg,
+        args.join(" ")
+    );
+}
+
+if (!isOwner(sender)) {
+    return sock.sendMessage(
+        msg.key.remoteJid,
+        {
+            text: "❌ Kamu tidak memiliki izin menggunakan command FWHZZ BOT."
+        },
+        {
+            quoted: msg
+        }
+    );
+}
     switch (command) {
 
         case "!help":

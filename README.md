@@ -1,154 +1,413 @@
-# 🤖 FWHZZ WhatsApp Bot
+🤖 FWHZZ WhatsApp Bot
 
-FWHZZ adalah bot WhatsApp berbasis **Node.js + Baileys** yang dapat digunakan untuk membantu mengelola grup WhatsApp.
+Bot WhatsApp berbasis Node.js + Baileys dengan berbagai fitur untuk administrasi grup, utility, keamanan, dan pengelolaan WhatsApp.
 
-Repository:
-
-https://github.com/hanzz1213/Simple-Whatsapp-Bot
+Repository ini bersifat public, sehingga siapa saja dapat mencoba dan mengembangkan bot ini.
 
 ---
 
-# ✨ Fitur
+✨ Fitur
 
-- `!help` — Menampilkan daftar command
-- `!status` — Mengecek status bot
-- `!id` — Menampilkan ID grup
-- `!add` — Menambahkan anggota
-- `!kick` — Mengeluarkan anggota
-- `!promote` — Menjadikan anggota admin
-- `!demote` — Menghapus status admin
-- `!del` — Menghapus pesan
-- `!tagall` — Mention semua anggota
-- `!hidetag` — Mention semua anggota
-- `!groupinfo` — Melihat informasi grup
-- `!link` — Mendapatkan link grup
-- `!revoke` — Mengganti link grup
-- `!mute` — Membatasi anggota
-- `!unmute` — Membuka pembatasan anggota
-- `!setname` — Mengubah nama grup
-- `!setdesc` — Mengubah deskripsi grup
-- `!scan` — Memindai file
+👑 Owner System
 
-> Daftar dan format command mengikuti versi source FWHZZ yang digunakan.
+- 🔐 Command hanya dapat digunakan oleh nomor owner.
+- 🤫 Nomor lain yang mencoba command tidak mendapatkan balasan.
+- 📱 Owner ditentukan secara lokal pada perangkat yang menjalankan bot.
+- 🔒 Nomor owner tidak perlu ditulis di source code.
+- 👥 Setiap orang yang menjalankan bot dapat menentukan owner mereka sendiri.
+
+👥 Group Management
+
+Command| Fungsi
+"!add nomor"| Menambahkan anggota
+"!kick @user"| Mengeluarkan anggota
+"!promote @user"| Menjadikan admin
+"!demote @user"| Menurunkan admin
+"!tagall"| Mention semua anggota
+"!hidetag"| Mention semua anggota tanpa menampilkan daftar mention
+"!groupinfo"| Melihat informasi grup
+"!link"| Mendapatkan link grup
+"!revoke"| Mengganti link grup
+"!setname teks"| Mengubah nama grup
+"!setdesc teks"| Mengubah deskripsi grup
+"!mute"| Membatasi pengguna sesuai sistem bot
+"!unmute"| Membuka kembali pembatasan
+
+🛠️ Utility
+
+Command| Fungsi
+"!help"| Menampilkan bantuan
+"!status"| Melihat status bot
+"!id"| Melihat ID chat
+"!owner"| Informasi owner
+"!sticker"| Membuat sticker
+"!tag"| Mention pengguna
+"!del"| Menghapus pesan tertentu
+
+🛡️ Security
+
+Command| Fungsi
+"!scan"| Memindai file menggunakan sistem scanner
+
+«Ketersediaan command dapat berbeda tergantung versi source dan konfigurasi bot.»
 
 ---
 
-# 📱 Persyaratan
+📱 Persyaratan
 
 Sebelum menjalankan bot, siapkan:
 
-- Android dengan Termux atau Linux
+- Android / Linux / VPS
 - Node.js
 - Git
-- Akun WhatsApp
-- Koneksi internet
+- Internet
+- Akun WhatsApp untuk bot
+
+Untuk Android, Termux dapat digunakan.
 
 ---
 
-# 🚀 Instalasi di Termux
+📥 Instalasi
 
-## 1. Update Termux
+1. Clone repository
 
-Jalankan:
+git clone https://github.com/hanzz1213/Simple-Whatsapp-Bot.git
 
-```bash
-pkg update && pkg upgrade
-2. Install Node.js dan Git
-pkg install nodejs git
-Cek versi:
-node -v
-git --version
-Jika keduanya menampilkan versi, instalasi berhasil.
-📥 Download FWHZZ
-Clone repository:
-git clone https://github.com/hanzz1213/Simple-Whatsapp-Bot.git fwhzz-bot
 Masuk ke folder:
+
 cd Simple-Whatsapp-Bot
+
+---
+
+2. Cek Node.js
+
+node -v
+
+Disarankan menggunakan versi Node.js modern yang kompatibel dengan dependency project.
+
+Jika Node.js belum tersedia di Termux:
+
+pkg update
+pkg upgrade
+pkg install nodejs git
+
+Cek kembali:
+
+node -v
+npm -v
+
+---
+
 📦 Install Dependency
+
 Jalankan:
+
 npm install
+
 Tunggu sampai proses selesai.
-⚙️ Konfigurasi
-Jika source FWHZZ menggunakan config.json, buat file konfigurasi:
-cp config.example.json config.json
-Kemudian edit:
+
+---
+
+👑 Konfigurasi Owner
+
+Owner tidak disimpan di "index.cjs".
+
+Owner disimpan secara lokal melalui:
+
+config.json
+
+File tersebut tidak boleh di-upload ke repository public.
+
+Jika "config.json" belum ada, buat:
+
 nano config.json
-Contoh:
+
+Isi:
+
 {
-  "owner": "628xxxxxxxxxx",
-  "targetGroup": "120xxxxxxxx@g.us"
+  "owner": "628xxxxxxxxxx"
 }
-👤 Owner
-owner adalah nomor WhatsApp pemilik atau administrator bot.
-Gunakan format internasional tanpa tanda +.
-Contoh:
-628123456789
-Bukan:
-+628123456789
-👥 Target Group
-targetGroup adalah ID grup WhatsApp yang diizinkan menggunakan bot.
-Contoh:
-120363xxxxxxxx@g.us
-Pastikan source FWHZZ yang digunakan memang membaca config.json. Jika tidak, konfigurasi tersebut harus disesuaikan dengan source bot.
-🆔 Cara Mendapatkan ID Grup
-Masukkan bot ke grup WhatsApp.
-Kemudian gunakan:
-!id
-Jika fitur tersebut tersedia, bot akan memberikan ID grup.
-Contoh:
-120363xxxxxxxx@g.us
-Masukkan ID tersebut ke config.json:
-{
-  "owner": "628xxxxxxxxxx",
-  "targetGroup": "120363xxxxxxxx@g.us"
-}
-📲 Menjalankan Bot
-Setelah instalasi dan konfigurasi selesai:
-node index.cjs
-Jika bot menggunakan pairing code, ikuti instruksi yang muncul di Termux.
-Gunakan akun WhatsApp yang ingin dijadikan akun bot.
-Setelah pairing berhasil, bot akan terhubung ke WhatsApp.
-🔐 Session WhatsApp
-Setelah berhasil login, FWHZZ akan membuat session.
-Contohnya:
-session/
-Jangan menghapus folder session jika tidak diperlukan.
-Session digunakan agar bot dapat mempertahankan login.
-Jangan pernah membagikan folder ini kepada orang lain.
-👑 Menjadikan Bot Admin
-Agar command administrasi grup dapat digunakan, jadikan akun bot sebagai admin.
-Caranya:
-Buka WhatsApp.
-Buka grup tempat bot berada.
-Tekan nama grup.
-Buka daftar peserta.
-Cari akun bot.
-Tekan akun bot.
-Pilih Jadikan admin.
-Setelah itu bot dapat menggunakan command yang membutuhkan hak admin, sesuai izin dan implementasi source.
-Contohnya:
-!kick
-!promote
-!demote
-!del
-!mute
-!unmute
-!setname
-!setdesc
-!link
-!revoke
-🧪 Tes Bot
-Setelah bot terhubung dan menjadi admin, coba:
-!help
-Jika bot membalas dengan daftar command, berarti bot sudah berjalan.
-Tes lainnya:
-!status
+
+Ganti:
+
+628xxxxxxxxxx
+
+dengan nomor WhatsApp kamu.
+
+Contoh format:
+
+6285817xxxxxx
+
+⚠️ Jangan gunakan:
+
++6285817xxxxxx
+
 atau:
+
+085817xxxxxx
+
+Gunakan format internasional:
+
+628xxxxxxxxxx
+
+---
+
+🔐 Sistem Owner Only
+
+FWHZZ menggunakan sistem owner-only.
+
+Contohnya:
+
+Owner
+628xxxxxxxxxx
+     ↓
+   !help
+     ↓
+   BOT RESPON
+
+Sedangkan:
+
+User lain
+628yyyyyyyyyy
+     ↓
+   !help
+     ↓
+   BOT DIAM
+
+Tidak ada pesan:
+
+❌ Kamu bukan owner
+
+Bot hanya mengabaikan command.
+
+---
+
+▶️ Menjalankan Bot
+
+Setelah konfigurasi selesai:
+
+node index.cjs
+
+Jika repository kamu menggunakan file utama berbeda, sesuaikan dengan file yang tersedia.
+
+---
+
+📱 Menghubungkan WhatsApp
+
+Saat bot meminta autentikasi, ikuti metode login yang tersedia pada versi Baileys yang digunakan oleh project.
+
+Jika menggunakan pairing code:
+
+1. Jalankan bot.
+2. Masukkan nomor WhatsApp yang akan digunakan sebagai akun bot.
+3. Bot akan memberikan pairing code.
+4. Buka WhatsApp.
+5. Masuk ke Perangkat tertaut.
+6. Pilih Tautkan perangkat.
+7. Pilih opsi menggunakan nomor telepon jika tersedia.
+8. Masukkan pairing code.
+
+Setelah berhasil:
+
+WhatsApp Connected
+
+Bot siap digunakan.
+
+---
+
+💬 Cara Menggunakan Command
+
+Semua command menggunakan prefix:
+
+!
+
+Contoh:
+
+!help
+
+Melihat status:
+
+!status
+
+Melihat ID:
+
 !id
-📋 Daftar Command
-!help
-Menampilkan daftar command.
-!help
-!status
-Mengecek status bot.
-!status
+
+---
+
+👥 Contoh Command Grup
+
+Menambahkan anggota
+
+!add 628123456789
+
+Mengeluarkan anggota
+
+Mention pengguna:
+
+!kick @user
+
+Promote
+
+!promote @user
+
+Demote
+
+!demote @user
+
+Tag semua
+
+!tagall
+
+Hide tag
+
+!hidetag
+
+Informasi grup
+
+!groupinfo
+
+---
+
+🎨 Sticker
+
+Kirim gambar kemudian gunakan:
+
+!sticker
+
+Bot akan memproses gambar menjadi sticker jika fitur tersebut tersedia pada versi project.
+
+---
+
+🛡️ File Scanner
+
+Untuk fitur scanner:
+
+1. Kirim file ke chat.
+2. Reply file tersebut.
+3. Gunakan:
+
+!scan
+
+Bot akan menjalankan proses scanning sesuai scanner yang dikonfigurasi.
+
+---
+
+🔧 Menjalankan di Background — Termux
+
+Jika ingin bot tetap berjalan setelah terminal ditutup:
+
+nohup node index.cjs > bot.log 2>&1 &
+
+Melihat log:
+
+tail -f bot.log
+
+Melihat proses:
+
+ps -ef | grep node
+
+---
+
+🔄 Update Bot
+
+Jika repository sudah pernah di-clone:
+
+cd Simple-Whatsapp-Bot
+
+Kemudian:
+
+git pull
+
+Install dependency jika ada perubahan:
+
+npm install
+
+Jalankan kembali:
+
+node index.cjs
+
+---
+
+🔐 Keamanan
+
+Jangan pernah upload:
+
+config.json
+session/
+creds.json
+auth_info/
+*.session
+token
+password
+API key
+
+Pastikan file rahasia dimasukkan ke:
+
+.gitignore
+
+Contoh:
+
+config.json
+session/
+auth_info/
+*.session
+.env
+
+---
+
+🌐 Repository
+
+Source code:
+
+"FWHZZ WhatsApp Bot — GitHub" (https://reference-url-citation.invalid/0)
+
+---
+
+🧪 Untuk Pengguna Baru
+
+Urutan paling mudah:
+
+1. Install Node.js
+        ↓
+2. Clone repository
+        ↓
+3. cd Simple-Whatsapp-Bot
+        ↓
+4. npm install
+        ↓
+5. Buat config.json
+        ↓
+6. Masukkan nomor owner
+        ↓
+7. node index.cjs
+        ↓
+8. Hubungkan WhatsApp
+        ↓
+9. Gunakan !help
+
+---
+
+⚠️ Catatan
+
+Bot ini menggunakan WhatsApp melalui library pihak ketiga. Gunakan secara bertanggung jawab dan jangan melakukan spam atau aktivitas yang melanggar aturan WhatsApp.
+
+Pastikan juga kamu memahami source code sebelum menjalankannya.
+
+---
+
+❤️ Credits
+
+FWHZZ WhatsApp Bot
+
+Developed by:
+
+hanzz1213
+
+Jika project ini membantu kamu, kamu dapat melakukan ⭐ pada repository GitHub.
+
+---
+
+📄 License
+
+Lihat file "LICENSE" pada repository untuk informasi lisensi project.

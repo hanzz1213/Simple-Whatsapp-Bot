@@ -12,7 +12,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@whiskeysockets/baileys": "^7.0.0-rc14",
-    "pino": "^10.3.1"
-  }
+  "@whiskeysockets/baileys": "6.6.0",
+  "pino": "^8.21.0"
+ }
 }

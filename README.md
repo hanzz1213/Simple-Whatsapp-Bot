@@ -1,103 +1,63 @@
-# FWHZZ WhatsApp Bot
+# Simple WhatsApp Bot
 
-Bot WhatsApp otomatis untuk manajemen grup dengan fitur moderasi, keamanan file, dan AI assistant.
+Bot WhatsApp sederhana & ringan yang dibuat menggunakan [Baileys](https://github.com/WhiskeySockets/Baileys). Cocok buat dijadikan bahan pembelajaran, base bot awal, atau langsung dipakai buat kebutuhan sehari-hari.
 
-## Fitur
+> **Note:** Proyek ini dikembangkan secara santai. Kalau ada bug atau mau nambahin fitur, feel free buat buka Issue atau Pull Request.
 
-### Manajemen Anggota
-- `!add <nomor>` - Tambah anggota ke grup
-- `!kick @user` - Keluarkan anggota (mention atau reply)
-- `!promote @user` - Jadikan admin
-- `!demote @user` - Cabut status admin
+---
 
-### Moderasi Pesan
-- `!del` - Hapus pesan (reply pesan yang mau dihapus)
-- `!tagall` - Tag semua member dengan mention terlihat
-- `!hidetag` - Tag semua member tanpa mention
+## 🚀 Fitur Utama
 
-### Pengaturan Grup
-- `!groupinfo` - Lihat info grup
-- `!link` - Dapatkan link undangan
-- `!revoke` - Perbarui link undangan
-- `!setname <nama>` - Ubah nama grup
-- `!setdesc <deskripsi>` - Ubah deskripsi
-- `!mute` - Kunci grup (hanya admin)
-- `!unmute` - Buka grup (semua bisa chat)
+- 📱 **Multi-Device Support** (via Baileys)
+- ⚡ **Ringan & Cepat**
+- 🛠️ **Struktur Kode Sederhana**: Mudah dipahami dan diubah sesuai kebutuhan
+- 🧩 **Fitur Dasar**:
+  - Menu / Command handler
+  - Downloader (TikTok, IG, YouTube, dll)
+  - Sticker Maker (Gambar to Sticker)
+  - Dan fitur seru lainnya
 
-### Keamanan
-- `!scan` - Scan file untuk malware (gunakan ClamAV) (kemungkinan tidak berfungsi)
+*(Fitur akan terus di-update kalau lagi selang)*
 
-### Informasi
-- `!help` - Daftar command
-- `!status` - Status bot
-- `!id` - ID grup
-- `!owner` - Nomor owner
+---
 
-### AI
-- `!ai <pertanyaan>` - Tanya ke Gemini AI (bisa digunakan siapa saja)
+## 🛠️ Persyaratan System
 
-## Install
+Sebelum menjalankan bot ini, pastikan kamu sudah menginstall:
+- [Node.js](https://nodejs.org/) (Versi 18+ direkomendasikan)
+- [Git](https://git-scm.com/)
+- [FFmpeg](https://ffmpeg.org/) (Sangat disarankan agar fitur media/stiker berjalan lancar)
 
-### 1. Clone repo
-```bash
-git clone https://github.com/hanzz1213/Simple-Whatsapp-Bot.git
-cd Simple-Whatsapp-Bot
-```
+---
 
-### 2. Install dependencies
-```bash
+## 💻 Cara Install & Menjalankan
+
+1. **Clone repository ini**
+   ```bash
+   git clone [https://github.com/hanzz1213/Simple-Whatsapp-Bot.git](https://github.com/hanzz1213/Simple-Whatsapp-Bot.git)
+   cd Simple-Whatsapp-Bot
+2.Install dependensi / module
+bash
 npm install
-```
-
-### 3. Setup config
-```bash
-cp config.example.json config.json
-```
-
-Edit `config.json`:
-```json
-{
-  "owner": "6281234567890",
-  "targetGroup": ""
-}
-```
-
-Ganti nomor dengan punya Anda (format 62XXXXXXXXX untuk Indonesia).
-
-### 4. Jalankan
-```bash
+3.Konfigurasi
+Buka file config.js (atau tempat setting nomor owner/prefix) dan sesuaikan nilainya
+4.jalankan bot
+bash
 npm start
-```
-
-## Cara Pairing
-
-1. Jalankan bot dengan `npm start`
-2. Masukkan nomor WhatsApp Anda (format 62...)
-3. Salin kode pairing yang muncul
-4. Di WhatsApp, masuk ke Setelan → Perangkat tertaut → Tautkan dengan nomor telepon
-5. Masukkan kode pairing
-6. Bot siap digunakan
-
-## Catatan
-
-- Bot harus menjadi admin grup untuk menjalankan command moderasi
-- Hanya owner yang bisa gunakan command admin (kecuali `!ai` dan `!scan`)
-- Untuk fitur scanner, pastikan ClamAV sudah terinstall
-- Bot perlu koneksi internet yang stabil
-
-## API Keys (Opsional)
-
-Untuk AI feature, tambahkan environment variable:
-```bash
-export GEMINI_API_KEY=your_key
-```
-
-## Deps
-
-- @whiskeysockets/baileys - WhatsApp API
-- pino - Logger
-- ClamAV - File scanner (external)
-
-## License
-
-ISC
+5.Scan QR / Pairing Code
+Ikuti petunjuk di terminal untuk menghubungkan akun WhatsApp kamu
+⚙️ Menjalankan di Background (PM2)
+Biar bot tetap running meski terminal ditutup, pakai PM2:
+npm install -g pm2
+pm2 start index.js --name "wa-bot"
+pm2 save
+🤝 Kontribusi
+Mau bantu ngembangin bot ini?
+Fork repository ini
+Buat branch fitur baru (git checkout -b fitur-keren)
+Commit perubahan (git commit -m 'Tambah fitur X')
+Push ke branch (git push origin fitur-keren)
+Buka Pull Request
+☕ Support
+Kalau repository ini membantu, jangan lupa kasih Star ⭐ ya!
+Created with ❤️ by hanzz1213.

@@ -25,7 +25,7 @@ Bot WhatsApp otomatis untuk manajemen grup dengan fitur moderasi, keamanan file,
 - `!unmute` - Buka grup (semua bisa chat)
 
 ### Keamanan
-- `!scan` - Scan file untuk malware (gunakan ClamAV)
+- `!scan` - Scan file untuk malware (gunakan ClamAV) (kemungkinan tidak berfungsi)
 
 ### Informasi
 - `!help` - Daftar command

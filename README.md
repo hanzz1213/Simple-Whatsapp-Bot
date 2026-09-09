@@ -1,126 +1,76 @@
-# FWHZZ WhatsApp Bot
+# Cara integrasi fitur baru ke index.cjs
 
-Bot WA sederhana pake Node.js + Baileys, buat bantu-bantu ngatur grup. Awalnya cuma buat dipake sendiri tapi ya udah sekalian di-share aja siapa tau ada yang butuh.
+## 1. Install dependency yang dibutuhin
 
-repo: https://github.com/hanzz1213/Simple-Whatsapp-Bot
-
-## Fitur
-
-Command yang ada sekarang:
-
-- `!help` - liat semua command
-- `!status` - cek bot masih hidup apa engga
-- `!id` - liat id grup
-- `!add` - invite member
-- `!kick` - keluarin member
-- `!promote` / `!demote` - jadiin/copot admin
-- `!del` - hapus pesan
-- `!tagall` / `!hidetag` - mention semua orang
-- `!groupinfo` - info grup
-- `!link` / `!revoke` - liat/ganti link invite
-- `!mute` / `!unmute` - kunci/buka grup
-- `!setname` / `!setdesc` - ganti nama/deskripsi grup
-- `!scan` - scan file
-
-nanti mungkin nambah lagi kalo sempet ngerjain.
-
-## Yang dibutuhin
-
-- HP android + Termux, atau bisa juga VPS/linux
-- Node.js sama Git udah keinstall
-- akun WA (disaranin pake nomor cadangan, bukan nomor utama)
-
-## Cara install (di Termux)
-
-Update dulu termuxnya
-
-```
-pkg update && pkg upgrade
+```bash
+npm install wa-sticker-formatter sharp axios ytdl-core spotify-url-info yt-search node-fetch@2
 ```
 
-install node sama git
+(pakai `node-fetch@2` karena package spotify-url-info butuh versi CommonJS)
+
+## 2. Copy folder `handlers/` ini ke root project kamu
+
+Jadi strukturnya nanti:
 
 ```
-pkg install nodejs git
+fwhzz-bot/
+├── handlers/
+│   ├── sticker.js
+│   ├── downloader.js
+│   └── spotify.js
+├── index.cjs
+├── config.json
+└── ...
 ```
 
-cek udah kepasang apa belum
+## 3. Import di paling atas index.cjs
 
-```
-node -v
-git --version
-```
-
-kalo dua-duanya keluar versi nya berarti aman, lanjut clone reponya
-
-```
-git clone https://github.com/hanzz1213/Simple-Whatsapp-Bot.git fwhzz-bot
-cd fwhzz-bot
+```js
+const { handleSticker, handleToImg } = require('./handlers/sticker');
+const { handleTiktok, handleYoutube } = require('./handlers/downloader');
+const { handleSpotify } = require('./handlers/spotify');
 ```
 
-terus install dependency nya, ini agak lama tergantung koneksi
+## 4. Panggil di bagian message handler kamu
 
-```
-npm install
-```
+Cari bagian di index.cjs yang isinya semacam `if (text.startsWith('!help'))` dkk (biasanya di dalam `sock.ev.on('messages.upsert', ...)`), lalu tambahin cabang baru:
 
-## Setting config
-
-Copy dulu file example nya
-
-```
-cp config.example.json config.json
-```
-
-terus edit pake nano (atau editor apa aja yang lo suka)
-
-```
-nano config.json
-```
-
-isinya kira2 gini
-
-```json
-{
-  "owner": "628xxxxxxxxxx",
-  "targetGroup": "120xxxxxxxx@g.us"
+```js
+else if (text.startsWith('!s')) {
+  await handleSticker(sock, msg, from);
+}
+else if (text.startsWith('!toimg')) {
+  await handleToImg(sock, msg, from);
+}
+else if (text.startsWith('!tt')) {
+  await handleTiktok(sock, msg, from, text);
+}
+else if (text.startsWith('!yt ')) {
+  await handleYoutube(sock, msg, from, text, false);
+}
+else if (text.startsWith('!ytmp3')) {
+  await handleYoutube(sock, msg, from, text, true);
+}
+else if (text.startsWith('!spotify')) {
+  await handleSpotify(sock, msg, from, text);
 }
 ```
 
-buat `owner`, isi nomor WA lo pake format internasional TAPI tanpa tanda +. jadi bukan `+628xxx` tapi `628xxx` aja.
+Sesuaikan nama variabel `sock`, `msg`, `from`, `text` dengan yang dipakai di index.cjs kamu — kemungkinan namanya udah sama karena pola umum Baileys, tapi cek dulu biar ga error.
 
-buat `targetGroup`, ini id grup yang boleh pake bot. cara dapetinnya masukin dulu bot ke grup, terus ketik `!id` di grup itu, nanti bot bakal balas id grupnya. tinggal copy paste ke config.
+## Command baru
 
-## Jalanin botnya
+| Command | Fungsi |
+|---|---|
+| `!s` (reply gambar/video) | Bikin stiker |
+| `!toimg` (reply stiker) | Stiker jadi gambar |
+| `!tt <link>` | Download TikTok tanpa watermark |
+| `!yt <link>` | Download video YouTube |
+| `!ytmp3 <link>` | Download audio YouTube |
+| `!spotify <link>` | Download lagu dari link Spotify |
 
-kalo config udah beres, tinggal
+## Catatan penting
 
-```
-node index.cjs
-```
-
-biasanya bakal muncul pairing code atau QR, ikutin aja instruksinya, scan/masukin di WA yang mau dijadiin bot.
-
-## Soal session
-
-pas login pertama bakal ke-generate folder `session/`. JANGAN dihapus kalo ga kepepet, soalnya itu yang bikin bot tetep login tanpa harus scan ulang tiap kali jalanin.
-
-dan yang paling penting - JANGAN SEKALI-KALI share folder ini ke orang lain atau upload ke github/public repo. itu sama aja kasih akses login WA lo ke orang. udah masuk di .gitignore sih harusnya, tapi tetep double check ya sebelum push.
-
-## Biar bisa dipake command admin
-
-command kayak kick, mute, dll butuh bot jadi admin dulu di grupnya. caranya:
-
-1. buka grup di WA
-2. tap nama grup di atas
-3. masuk ke daftar peserta
-4. cari akun bot, tap
-5. pilih "jadikan admin"
-
-## Testing
-
-kalo udah connect dan udah admin, coba aja ketik `!help` di grup. kalo bot bales list command berarti udah jalan normal. bisa juga coba `!status` atau `!id`.
-
----
-
-ada bug atau mau request fitur, buka issue aja di repo ini.
+- **ytdl-core** kadang butuh update berkala karena YouTube sering ubah sistemnya — kalau tiba-tiba error, coba `npm update ytdl-core` dulu.
+- **!spotify** tidak ambil audio langsung dari Spotify (memang tidak bisa/dilindungi), tapi cari lagu yang sama di YouTube lalu ambil audionya — jadi hasilnya bisa sedikit beda kualitas/versi dari originalnya.
+- Fitur downloader ini manfaatin API pihak ketiga (tikwm) dan YouTube — pastikan dipakai buat penggunaan wajar (bukan buat distribusi ulang konten orang lain secara komersial), karena tetap ada aturan hak cipta dari platform aslinya.

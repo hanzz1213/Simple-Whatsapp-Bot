@@ -34,7 +34,7 @@ Sebelum menjalankan bot ini, pastikan kamu sudah menginstall:
 
 1. **Clone repository ini**
    ```bash
-   git clone [https://github.com/hanzz1213/Simple-Whatsapp-Bot.git](https://github.com/hanzz1213/Simple-Whatsapp-Bot.git)
+   git clone https://github.com/hanzz1213/Simple-Whatsapp-Bot.git(https://github.com/hanzz1213/Simple-Whatsapp-Bot.git)
    cd Simple-Whatsapp-Bot
 2.Install dependensi / module
 bash

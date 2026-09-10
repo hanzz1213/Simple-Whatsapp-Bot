@@ -1,5 +1,3 @@
-
-
 async function handleSpotifyLive(sock, msg, from) {
   try {
     const { data } = await axios.get(`${SPOTIFYLIVE_BASE_URL}/api/create-room`);

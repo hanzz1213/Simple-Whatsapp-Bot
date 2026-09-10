@@ -50,7 +50,7 @@ function createRoom(roomId) {
     position: 0,
     updatedAt: Date.now(),
   };
-  rooms.set(roomId);
+  rooms.set(roomId, room);
   return room;
 }
 
@@ -93,15 +93,30 @@ app.get('/api/search', async (req, res) => {
 });
 
 // --- REST: stream audio buat <audio> tag ---
-app.get('/api/stream/:videoId', (req, res) => {
+app.get('/api/stream/:videoId', async (req, res) => {
   const { videoId } = req.params;
-  res.setHeader('Content-Type', 'audio/mpeg');
-  ytdl(`https://youtube.com/watch?v=${videoId}`, { filter: 'audioonly', quality: 'highestaudio' })
-    .on('error', err => {
-      console.error('stream error', err);
-      res.end();
-    })
-    .pipe(res);
+  try {
+    // pilih format dulu biar Content-Type yang dikirim ke browser sesuai
+    // sama format aslinya (biasanya webm/opus, bukan mp3/mpeg) -- kalau
+    // headernya salah, <audio> tag di browser bisa gagal muter suaranya
+    const info = await ytdl.getInfo(`https://youtube.com/watch?v=${videoId}`);
+    const chosenFormat = ytdl.chooseFormat(info.formats, {
+      filter: 'audioonly',
+      quality: 'highestaudio',
+    });
+    const mimetype = chosenFormat.mimeType?.split(';')[0] || 'audio/webm';
+
+    res.setHeader('Content-Type', mimetype);
+    ytdl.downloadFromInfo(info, { format: chosenFormat })
+      .on('error', err => {
+        console.error('stream error', err);
+        res.end();
+      })
+      .pipe(res);
+  } catch (err) {
+    console.error('stream setup error', err);
+    res.status(500).end();
+  }
 });
 
 // --- Socket.IO: sinkronisasi room ---

@@ -3,8 +3,6 @@
 // Install dulu: npm install wa-sticker-formatter sharp
 
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
-const fs = require('fs');
-const path = require('path');
 
 async function handleSticker(sock, msg, from) {
   try {

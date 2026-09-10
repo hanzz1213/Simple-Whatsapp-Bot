@@ -49,15 +49,24 @@ async function handleYoutube(sock, msg, from, text, asAudio = false) {
     await sock.sendMessage(from, { text: `⏳ Mengunduh: ${title}` });
 
     if (asAudio) {
-      const stream = ytdl(url, { filter: 'audioonly', quality: 'highestaudio' });
+      // ambil info dulu, terus pilih format audio terbaik SEBELUM download
+      // biar mimetype yang dikirim sesuai sama format asli (webm/opus atau m4a)
+      // -- kalau mimetype ga cocok sama isi filenya, audio bisa gagal diputer
+      const chosenFormat = ytdl.chooseFormat(info.formats, {
+        filter: 'audioonly',
+        quality: 'highestaudio',
+      });
+      const mimetype = chosenFormat.mimeType?.split(';')[0] || 'audio/webm';
+
+      const stream = ytdl.downloadFromInfo(info, { format: chosenFormat });
       const chunks = [];
       for await (const chunk of stream) chunks.push(chunk);
       const buffer = Buffer.concat(chunks);
 
       await sock.sendMessage(from, {
         audio: buffer,
-        mimetype: 'audio/mp4',
-        fileName: `${title}.mp3`,
+        mimetype,
+        fileName: `${title}.${chosenFormat.container || 'webm'}`,
       });
     } else {
       const stream = ytdl(url, { filter: format => format.container === 'mp4' && format.hasVideo && format.hasAudio, quality: 'highest' });

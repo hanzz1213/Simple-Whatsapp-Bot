@@ -1,21 +1,3 @@
-// spotifylive/server.js
-//
-// Server terpisah buat fitur "listening room". Jalan bareng bot WA kamu
-// (proses Node sendiri), nyediain GUI mirip Spotify + room realtime
-// pake Socket.IO biar host & pendengar bisa dengerin lagu yang sama
-// bareng-bareng.
-//
-// CATATAN JUJUR: ini BUKAN streaming resmi dari Spotify (Spotify nge-DRM
-// audio-nya, ga bisa diambil langsung tanpa Spotify Premium + Web Playback
-// SDK resmi + OAuth login tiap user). Jadi caranya: search & metadata
-// tampilannya nge-mirip Spotify, tapi sumber audio sebenernya dari YouTube
-// (sama kayak fitur !ytmp3 sebelumnya). Kalau nanti mau upgrade ke Spotify
-// Web Playback SDK asli, itu proyek terpisah yang jauh lebih besar (perlu
-// tiap listener punya akun Spotify Premium).
-//
-// Install dulu:
-//   npm install express socket.io ytdl-core yt-search nanoid@3
-
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');

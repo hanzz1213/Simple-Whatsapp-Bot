@@ -8,7 +8,8 @@
 // YouTube (sama seperti fitur !ytmp3). Ini pendekatan yang paling umum
 // dipakai bot-bot WA lain karena tidak melanggar proteksi Spotify.
 
-const { default: spotifyUrlInfo } = require('spotify-url-info')(require('node-fetch'));
+const fetch = require('node-fetch');
+const { getData } = require('spotify-url-info')(fetch);
 const yts = require('yt-search');
 const ytdl = require('ytdl-core');
 
@@ -22,7 +23,7 @@ async function handleSpotify(sock, msg, from, text) {
     await sock.sendMessage(from, { text: '🔎 Mencari info lagu...' });
 
     // ambil metadata dari link spotify
-    const track = await spotifyUrlInfo.getData(url);
+    const track = await getData(url);
     const title = track.name;
     const artist = track.artists?.map(a => a.name).join(', ') || track.artist || '';
     const query = `${title} ${artist}`;
@@ -37,15 +38,23 @@ async function handleSpotify(sock, msg, from, text) {
 
     await sock.sendMessage(from, { text: `⏳ Mengunduh: ${title} - ${artist}` });
 
-    const stream = ytdl(video.url, { filter: 'audioonly', quality: 'highestaudio' });
+    // pilih format dulu, baru set mimetype sesuai format yang beneran dipilih
+    const info = await ytdl.getInfo(video.url);
+    const chosenFormat = ytdl.chooseFormat(info.formats, {
+      filter: 'audioonly',
+      quality: 'highestaudio',
+    });
+    const mimetype = chosenFormat.mimeType?.split(';')[0] || 'audio/webm';
+
+    const stream = ytdl.downloadFromInfo(info, { format: chosenFormat });
     const chunks = [];
     for await (const chunk of stream) chunks.push(chunk);
     const buffer = Buffer.concat(chunks);
 
     await sock.sendMessage(from, {
       audio: buffer,
-      mimetype: 'audio/mp4',
-      fileName: `${title} - ${artist}.mp3`,
+      mimetype,
+      fileName: `${title} - ${artist}.${chosenFormat.container || 'webm'}`,
     });
   } catch (err) {
     console.error('Error handleSpotify:', err);

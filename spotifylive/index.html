@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Live Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #141412;
+    --surface: #1d1c19;
+    --surface-2: #262521;
+    --accent: #3FA55A;
+    --accent-dim: #2C7A42;
+    --text: #F3F1EA;
+    --text-dim: #9B978C;
+    --line: #2E2C27;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h1, h2, .logo, .track-title { font-family: 'Sora', system-ui, sans-serif; }
+
+  header {
+    width: 100%;
+    max-width: 480px;
+    padding: 20px 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo { font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+  .logo span { color: var(--accent); }
+  .badge {
+    font-size: 12px;
+    color: var(--text-dim);
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+  }
+  .badge.host { color: var(--accent); border-color: var(--accent-dim); }
+
+  main {
+    width: 100%;
+    max-width: 480px;
+    padding: 24px 20px 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* --- room / now playing --- */
+  .room-card {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 28px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .disc {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #333 0%, #1a1a1a 60%);
+    border: 6px solid var(--surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    transition: box-shadow .3s ease;
+  }
+  .disc img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+  .disc::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: var(--bg);
+    border-radius: 50%;
+    border: 2px solid #444;
+  }
+  .disc.spinning img {
+    animation: spin 6s linear infinite;
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .track-title { font-size: 17px; font-weight: 600; text-align: center; }
+  .track-artist { font-size: 14px; color: var(--text-dim); text-align: center; margin-top: -10px; }
+  .empty-state { color: var(--text-dim); font-size: 14px; text-align: center; }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .play-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    color: #0d1a10;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .play-btn:disabled { opacity: .4; cursor: default; }
+
+  .listeners {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  /* --- search --- */
+  .search-box {
+    display: flex;
+    gap: 8px;
+  }
+  .search-box input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    outline: none;
+  }
+  .search-box input:focus { border-color: var(--accent-dim); }
+  .search-box button {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 0 16px;
+    cursor: pointer;
+  }
+
+  .results { display: flex; flex-direction: column; gap: 4px; }
+  .result-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .result-item:hover { background: var(--surface); }
+  .result-item img {
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .result-title { font-size: 14px; font-weight: 500; }
+  .result-artist { font-size: 12px; color: var(--text-dim); }
+
+  .section-label { font-size: 13px; color: var(--text-dim); margin-bottom: 4px; }
+
+  audio { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">live<span>room</span></div>
+  <div class="badge" id="roleBadge">bergabung...</div>
+</header>
+
+<main>
+  <div class="room-card">
+    <div class="disc" id="disc">
+      <img id="discImg" src="" style="display:none" />
+    </div>
+    <div id="trackInfo">
+      <div class="empty-state">Belum ada lagu diputar</div>
+    </div>
+    <div class="controls">
+      <button class="play-btn" id="playBtn" disabled>▶</button>
+    </div>
+    <div class="listeners">
+      <span class="dot"></span>
+      <span id="listenerCount">1</span> orang dengerin bareng
+    </div>
+  </div>
+
+  <div id="hostControls" style="display:none; flex-direction: column; gap: 12px;">
+    <div class="section-label">cari lagu</div>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="judul lagu atau artis..." />
+      <button id="searchBtn">Cari</button>
+    </div>
+    <div class="results" id="results"></div>
+  </div>
+</main>
+
+<audio id="audio"></audio>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const roomId = window.location.pathname.split('/room/')[1];
+  const socket = io();
+  const audio = document.getElementById('audio');
+  const disc = document.getElementById('disc');
+  const discImg = document.getElementById('discImg');
+  const trackInfo = document.getElementById('trackInfo');
+  const playBtn = document.getElementById('playBtn');
+  const roleBadge = document.getElementById('roleBadge');
+  const hostControls = document.getElementById('hostControls');
+  const listenerCount = document.getElementById('listenerCount');
+  const searchInput = document.getElementById('searchInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const resultsEl = document.getElementById('results');
+
+  let isHost = false;
+  let currentTrack = null;
+
+  socket.emit('join-room', { roomId, name: 'Pendengar' });
+
+  socket.on('joined', state => {
+    isHost = state.isHost;
+    updateRole();
+    applyState(state);
+  });
+
+  socket.on('you-are-host', () => {
+    isHost = true;
+    updateRole();
+  });
+
+  socket.on('state-update', state => applyState(state));
+
+  socket.on('listener-count', count => {
+    listenerCount.textContent = count;
+  });
+
+  socket.on('sync-correction', ({ position }) => {
+    if (isHost) return;
+    if (Math.abs(audio.currentTime - position) > 2) {
+      audio.currentTime = position;
+    }
+  });
+
+  function updateRole() {
+    roleBadge.textContent = isHost ? 'kamu host' : 'pendengar';
+    roleBadge.classList.toggle('host', isHost);
+    hostControls.style.display = isHost ? 'flex' : 'none';
+    playBtn.disabled = !isHost && !currentTrack;
+  }
+
+  function applyState(state) {
+    listenerCount.textContent = state.listenerCount;
+    if (state.current && (!currentTrack || currentTrack.videoId !== state.current.videoId)) {
+      currentTrack = state.current;
+      audio.src = `/api/stream/${currentTrack.videoId}`;
+      trackInfo.innerHTML = `
+        <div class="track-title">${escapeHtml(currentTrack.title)}</div>
+        <div class="track-artist">${escapeHtml(currentTrack.artist)}</div>
+      `;
+      if (currentTrack.thumbnail) {
+        discImg.src = currentTrack.thumbnail;
+        discImg.style.display = 'block';
+      }
+      playBtn.disabled = false;
+    }
+    if (state.isPlaying) {
+      audio.currentTime = state.position || 0;
+      audio.play().catch(() => {});
+      disc.classList.add('spinning');
+      playBtn.textContent = '⏸';
+    } else {
+      audio.pause();
+      disc.classList.remove('spinning');
+      playBtn.textContent = '▶';
+    }
+  }
+
+  playBtn.addEventListener('click', () => {
+    if (!isHost || !currentTrack) return;
+    const playing = audio.paused;
+    if (playing) audio.play().catch(() => {});
+    else audio.pause();
+    socket.emit('toggle-play', { isPlaying: playing, position: audio.currentTime });
+  });
+
+  // host ngirim posisi tiap 3 detik biar listener bisa koreksi drift
+  setInterval(() => {
+    if (isHost && currentTrack && !audio.paused) {
+      socket.emit('sync-tick', { position: audio.currentTime });
+    }
+  }, 3000);
+
+  searchBtn.addEventListener('click', doSearch);
+  searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+  async function doSearch() {
+    const q = searchInput.value.trim();
+    if (!q) return;
+    resultsEl.innerHTML = '<div class="section-label">nyari...</div>';
+    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    resultsEl.innerHTML = '';
+    data.results.forEach(track => {
+      const item = document.createElement('div');
+      item.className = 'result-item';
+      item.innerHTML = `
+        <img src="${track.thumbnail}" />
+        <div>
+          <div class="result-title">${escapeHtml(track.title)}</div>
+          <div class="result-artist">${escapeHtml(track.artist)}</div>
+        </div>
+      `;
+      item.addEventListener('click', () => {
+        socket.emit('play-track', track);
+        resultsEl.innerHTML = '';
+        searchInput.value = '';
+      });
+      resultsEl.appendChild(item);
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+</script>
+
+</body>
+</html>

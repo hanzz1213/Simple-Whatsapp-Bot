@@ -1,43 +1,57 @@
-// handlers/spotifylive.js
-// Fitur: !spotifylive -> bikin room baru & kirim link-nya ke chat.
+// handlers/spotify.js
+// Fitur: !spotify <url>
+// Install dulu: npm install spotify-url-info yt-search ytdl-core
 //
-// PENTING: server spotifylive (folder spotifylive/) harus dijalanin
-// terpisah dan HARUS bisa diakses publik (bukan cuma localhost), soalnya
-// nanti yang buka link itu temen-temen kamu di HP masing-masing, bukan
-// cuma kamu sendiri.
-//
-// Opsi paling gampang buat expose ke publik: pakai ngrok
-//   npm install -g ngrok      (atau download dari ngrok.com)
-//   ngrok http 4001
-// nanti ngrok kasih URL publik kayak https://xxxx.ngrok-free.app
-// isi itu ke BASE_URL di bawah (lewat config.json atau env var).
-//
-// Kalau kamu punya VPS dengan domain/IP publik, tinggal set BASE_URL
-// ke domain/IP itu, ga perlu ngrok.
+// CATATAN: Spotify tidak menyediakan cara resmi untuk download audio lagunya
+// (file audio di-DRM/protected). Jadi cara paling aman & stabil: ambil info
+// lagu (judul + artis) dari link Spotify, lalu cari & ambil audionya dari
+// YouTube (sama seperti fitur !ytmp3). Ini pendekatan yang paling umum
+// dipakai bot-bot WA lain karena tidak melanggar proteksi Spotify.
 
-const axios = require('axios');
+const fetch = require('node-fetch');
+const { getData } = require('spotify-url-info')(fetch);
+const yts = require('yt-search');
+const ytdl = require('ytdl-core');
 
-// ganti sesuai setup kamu, atau taruh di config.json terus require di sini
-const SPOTIFYLIVE_BASE_URL = process.env.SPOTIFYLIVE_BASE_URL || 'http://localhost:4001';
-
-async function handleSpotifyLive(sock, msg, from) {
+async function handleSpotify(sock, msg, from, text) {
   try {
-    const { data } = await axios.get(`${SPOTIFYLIVE_BASE_URL}/api/create-room`);
-    const link = `${SPOTIFYLIVE_BASE_URL}/room/${data.roomId}`;
+    const url = text.split(' ')[1];
+    if (!url || !url.includes('open.spotify.com')) {
+      return sock.sendMessage(from, { text: 'Contoh: !spotify https://open.spotify.com/track/xxxxx' });
+    }
+
+    await sock.sendMessage(from, { text: '🔎 Mencari info lagu...' });
+
+    // ambil metadata dari link spotify
+    const track = await getData(url);
+    const title = track.name;
+    const artist = track.artists?.map(a => a.name).join(', ') || track.artist || '';
+    const query = `${title} ${artist}`;
+
+    // cari di youtube berdasarkan judul+artis
+    const searchResult = await yts(query);
+    const video = searchResult.videos[0];
+
+    if (!video) {
+      return sock.sendMessage(from, { text: 'Lagu tidak ditemukan.' });
+    }
+
+    await sock.sendMessage(from, { text: `⏳ Mengunduh: ${title} - ${artist}` });
+
+    const stream = ytdl(video.url, { filter: 'audioonly', quality: 'highestaudio' });
+    const chunks = [];
+    for await (const chunk of stream) chunks.push(chunk);
+    const buffer = Buffer.concat(chunks);
 
     await sock.sendMessage(from, {
-      text:
-        `🎧 Room baru dibuat!\n\n` +
-        `${link}\n\n` +
-        `Yang buka link ini duluan otomatis jadi host (bisa cari & muter lagu). ` +
-        `Yang lain tinggal buka link yang sama buat ikut dengerin bareng.`,
+      audio: buffer,
+      mimetype: 'audio/mp4',
+      fileName: `${title} - ${artist}.mp3`,
     });
   } catch (err) {
-    console.error('Error handleSpotifyLive:', err);
-    await sock.sendMessage(from, {
-      text: 'Gagal bikin room. Pastikan server spotifylive lagi nyala ya.',
-    });
+    console.error('Error handleSpotify:', err);
+    await sock.sendMessage(from, { text: 'Gagal mengambil lagu dari Spotify. Cek link atau coba lagi.' });
   }
 }
 
-module.exports = { handleSpotifyLive };
+module.exports = { handleSpotify };
